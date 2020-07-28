@@ -1,3 +1,7 @@
+@tailwind base;
+
+@tailwind components;
+
 /* LiveView specific classes for your customizations */
 .phx-click-loading {
   opacity: 0.5;
@@ -11,3 +15,7 @@
 .phx-disconnected *{
   pointer-events: none;
 }
+
+@import "../node_modules/nprogress/nprogress.css";
+
+@tailwind utilities;

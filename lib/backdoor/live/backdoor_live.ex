@@ -10,7 +10,7 @@ defmodule Backdoor.BackdoorLive do
   def render(assigns) do
     ~L"""
     <div class="container">
-      <h1>Backdoor LiveView is alive!</h1>
+      <h1 class="text-orange-500">Backdoor LiveView is alive!</h1>
     </div>
     """
   end
