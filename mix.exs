@@ -1,23 +1,22 @@
-defmodule Phoenix.LiveDashboard.MixProject do
+defmodule Backdoor.MixProject do
   use Mix.Project
 
-  @version "0.2.7"
+  @version "0.0.1"
 
   def project do
     [
-      app: :phoenix_live_dashboard,
+      app: :backdoor,
       version: @version,
       elixir: "~> 1.7",
       compilers: [:phoenix] ++ Mix.compilers(),
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
       package: package(),
-      name: "LiveDashboard",
+      name: "Backdoor",
       docs: docs(),
-      homepage_url: "http://www.phoenixframework.org",
-      description: "Real-time performance dashboard for Phoenix",
-      aliases: aliases(),
-      xref: [exclude: [:cpu_sup, :disksup, :memsup]]
+      homepage_url: "https://www.amberbit.com",
+      description: "Web IEx console for Phoenix applications.",
+      aliases: aliases()
     ]
   end
 
@@ -27,7 +26,7 @@ defmodule Phoenix.LiveDashboard.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {Phoenix.LiveDashboard.Application, []},
+      mod: {Backdoor.Application, []},
       extra_applications: [:logger]
     ]
   end
@@ -42,12 +41,8 @@ defmodule Phoenix.LiveDashboard.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix_live_view,
-       [github: "phoenixframework/phoenix_live_view"] ++ phoenix_live_view_opts()},
-      {:telemetry_metrics, "~> 0.4.0 or ~> 0.5.0"},
+      {:phoenix_live_view, "~> 0.14"},
       {:phoenix_html, "~> 2.14.1 or ~> 2.15"},
-      {:circular_buffer, "~> 0.2", only: :dev},
-      {:telemetry_poller, "~> 0.4", only: :dev},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:plug_cowboy, "~> 2.0", only: :dev},
       {:jason, "~> 1.0", only: [:dev, :test, :docs]},
@@ -57,39 +52,26 @@ defmodule Phoenix.LiveDashboard.MixProject do
     ]
   end
 
-  defp phoenix_live_view_opts do
-    if path = System.get_env("LIVE_VIEW_PATH") do
-      [path: path]
-    else
-      []
-    end
-  end
-
   defp docs do
     [
-      main: "Phoenix.LiveDashboard",
+      main: "Backdoor",
       source_ref: "v#{@version}",
-      source_url: "https://github.com/phoenixframework/phoenix_live_dashboard",
+      source_url: "https://github.com/amberbit/backdoor",
       extra_section: "GUIDES",
       extras: extras(),
-      nest_modules_by_prefix: [Phoenix.LiveDashboard]
+      nest_modules_by_prefix: [Backdoor]
     ]
   end
 
   defp extras do
-    [
-      "guides/metrics.md",
-      "guides/request_logger.md",
-      "guides/os_mon.md",
-      "guides/metrics_history.md"
-    ]
+    []
   end
 
   defp package do
     [
-      maintainers: ["Michael Crumm", "Chris McCord", "José Valim"],
+      maintainers: ["Hubert Łępicki"],
       licenses: ["MIT"],
-      links: %{github: "https://github.com/phoenixframework/phoenix_live_dashboard"},
+      links: %{github: "https://github.com/amberbit/backdoor"},
       files: ~w(lib priv CHANGELOG.md LICENSE.md mix.exs README.md)
     ]
   end
