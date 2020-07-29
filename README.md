@@ -25,7 +25,7 @@ end
 The Backdoor is built on top of LiveView. If LiveView is already installed in your app, feel free to skip this section.
 
 If you plan to use LiveView in your application in the future, we recommend you to follow [the official installation instructions](https://hexdocs.pm/phoenix_live_view/installation.html).
-This guide only covers the minimum steps necessary for the LiveDashboard itself to run.
+This guide only covers the minimum steps necessary for the Backdoor itself to run.
 
 First, update your endpoint's configuration to include a signing salt. You can generate a signing salt by running `mix phx.gen.secret 32` (note Phoenix v1.5+ apps already have this configuration):
 
@@ -104,7 +104,13 @@ For those planning to contribute to this project, you can run a dev version of t
 
 Alternatively, run `iex -S mix dev` if you also want a shell.
 
+## Project set up & structure files
+
+The project set up / infrastructure was taken from Phoenix LiveView project, and specifically the version available under this link:
+https://github.com/phoenixframework/phoenix_live_view/commit/656235af01f923c88c1f68033862399e4e45ab9e
+and was adjusted to the needs of this project slightly, remaining over all very similar to how development / testing environment for Backdoor works.
+
 ## License
 
-MIT License. Copyright (c) 2019 AmberBit Sp. z o. o.
+MIT License. Copyright (c) 2020 Hubert Łępicki, AmberBit Sp. z o. o.
 MIT License. Copyright (c) 2019 Michael Crumm, Chris McCord, José Valim.

@@ -18,7 +18,6 @@ defmodule Backdoor.Web do
   def live_view do
     quote do
       @moduledoc false
-      use Phoenix.LiveView, layout: {Backdoor.LayoutView, "live.html"}
       unquote(view_helpers())
     end
   end

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" phx-socket="<%= live_socket_path(@conn) %>">
+<html lang="en" phx-socket="<%= live_socket_path(@conn) %>" class="flex w-full h-full" >
   <head>
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -8,7 +8,7 @@
     <title><%= assigns[:page_title] || "Backdoor" %></title>
     <style><%= raw(render("app.css")) %></style>
   </head>
-  <body>
+  <body style="height: min-content;" class="my-auto w-full">
     <%= @inner_content %>
   </body>
   <script><%= raw(render("app.js")) %></script>

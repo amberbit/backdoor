@@ -1,7 +1,7 @@
 defmodule Backdoor.MixProject do
   use Mix.Project
 
-  @version "0.0.1"
+  @version "0.0.1-dev"
 
   def project do
     [
@@ -14,8 +14,8 @@ defmodule Backdoor.MixProject do
       package: package(),
       name: "Backdoor",
       docs: docs(),
-      homepage_url: "https://www.amberbit.com",
-      description: "Web IEx console for Phoenix applications.",
+      homepage_url: "https://github.com/amberbit/backdoor",
+      description: "Web console for Elixir & Phoenix applications.",
       aliases: aliases()
     ]
   end
@@ -47,7 +47,7 @@ defmodule Backdoor.MixProject do
       {:plug_cowboy, "~> 2.0", only: :dev},
       {:jason, "~> 1.0", only: [:dev, :test, :docs]},
       {:floki, "~> 0.27.0", only: :test},
-      {:ex_doc, "~> 0.21", only: :docs},
+      {:ex_doc, "~> 0.21", only: :dev, runtime: false},
       {:stream_data, "~> 0.1", only: :test}
     ]
   end

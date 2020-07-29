@@ -20,6 +20,6 @@ erl_crash.dump
 *.ez
 
 # Ignore package tarball (built via "mix hex.build").
-phoenix_live_dashboard-*.tar
+backdoor-*.tar
 
 node_modules

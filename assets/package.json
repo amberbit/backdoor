@@ -1,9 +1,9 @@
 {
-  "name": "phoenix_live_dashboard",
+  "name": "phoenix_backdoor",
   "version": "0.1.0",
-  "description": "The Phoenix LiveDashboard JavaScript client.",
+  "description": "The web console for Elixir & Phoenix projects.",
   "license": "MIT",
-  "main": "./assets/js/phoenix_live_dashboard.js",
+  "main": "./assets/js/phoenix_backdoor.js",
   "repository": {},
   "scripts": {
     "build": "webpack --mode production",
