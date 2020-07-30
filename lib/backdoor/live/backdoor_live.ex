@@ -7,7 +7,7 @@ defmodule Backdoor.BackdoorLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket |> assign(bindings: [], output: [])}
+    {:ok, socket |> assign(bindings: [], env: init_env(), output: [])}
   end
 
   @impl true
@@ -48,11 +48,20 @@ defmodule Backdoor.BackdoorLive do
     """
   end
 
+  @impl true
   def handle_event("execute", %{"command" => %{"text" => command}}, socket) do
     {:ok, ast} = Code.string_to_quoted(command)
-    {result, bindings} = Code.eval_quoted(ast, socket.assigns.bindings, [])
+    {result, bindings, env} = :elixir.eval_forms(ast, socket.assigns.bindings, socket.assigns.env)
 
     output = socket.assigns.output ++ ["iex> " <> command] ++ [inspect(result)]
-    {:noreply, socket |> push_event("command", %{text: ""}) |> assign(bindings: bindings, output: output)}
+
+    {:noreply,
+     socket
+     |> push_event("command", %{text: ""})
+     |> assign(bindings: bindings, env: env, output: output)}
+  end
+
+  def init_env do
+    :elixir.env_for_eval(file: "iex")
   end
 end
