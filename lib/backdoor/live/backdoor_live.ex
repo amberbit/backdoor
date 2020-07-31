@@ -50,14 +50,24 @@ defmodule Backdoor.BackdoorLive do
 
   @impl true
   def handle_event("execute", %{"command" => %{"text" => command}}, socket) do
-    pid = GenServer.whereis(Backdoor.CodeRunner)
-    result = Backdoor.CodeRunner.execute(pid, command)
+    formatted_result_or_error =
+      with pid <- GenServer.whereis(Backdoor.CodeRunner),
+           {:ok, result} <- Backdoor.CodeRunner.execute(pid, command) do
+        inspect(result)
+      else
+        {:error, kind, error, stack} ->
+          format_error(kind, error, stack)
+      end
 
-    output = socket.assigns.output ++ ["backdoor> " <> command] ++ [inspect(result)]
+    output = socket.assigns.output ++ ["backdoor> " <> command] ++ [formatted_result_or_error]
 
     {:noreply,
      socket
      |> push_event("command", %{text: ""})
      |> assign(output: output)}
+  end
+
+  defp format_error(kind, error, stack) do
+    Exception.format(kind, error, stack)
   end
 end

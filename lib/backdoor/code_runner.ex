@@ -20,13 +20,21 @@ defmodule Backdoor.CodeRunner do
 
   @impl true
   def handle_call({:execute, code}, _from, state) do
-    {:ok, ast} = Code.string_to_quoted(code)
-    {result, bindings, env} = :elixir.eval_forms(ast, state.bindings, state.env)
-
-    {:reply, result, %{state | bindings: bindings, env: env}}
+    try do
+      {result, bindings, env} = do_execute(code, state.bindings, state.env)
+      {:reply, {:ok, result}, %{state | bindings: bindings, env: env}}
+    catch
+      kind, error ->
+        {:reply, {:error, kind, error, __STACKTRACE__}, state}
+    end
   end
 
   # private
+
+  defp do_execute(code, bindings, env) do
+    {:ok, ast} = Code.string_to_quoted(code)
+    :elixir.eval_forms(ast, bindings, env)
+  end
 
   defp init_env do
     :elixir.env_for_eval(file: "backdoor")
