@@ -4,6 +4,7 @@ defmodule Backdoor.Application do
 
   def start(_, _) do
     children = [
+      {Backdoor.CodeRunner, name: Backdoor.CodeRunner},
       {DynamicSupervisor, name: Backdoor.DynamicSupervisor, strategy: :one_for_one}
     ]
 

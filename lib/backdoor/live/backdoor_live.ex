@@ -7,7 +7,7 @@ defmodule Backdoor.BackdoorLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket |> assign(bindings: [], env: init_env(), output: [])}
+    {:ok, socket |> assign(output: [])}
   end
 
   @impl true
@@ -35,11 +35,11 @@ defmodule Backdoor.BackdoorLive do
         <!-- Input -->
         <div class="pb-6 px-4 flex-none">
           <div class="flex rounded-lg border-2 border-grey overflow-hidden">
-            <span class="text-xl text-grey border-r-0 border-grey p-2">
-              iex&gt;
+            <span class="text-xl text-grey border-r-0 border-grey p-2 px-0">
+              backdoor&gt;
             </span>
-            <%= f = form_tag "#", [phx_submit: :execute, class: "flex w-full"] %>
-              <%= text_input :command, :text, [placeholer: "Write Elixir code to execute and hit 'Enter'...", value: "", class: "w-full px-4 outline-none"] %>
+            <%= form_tag "#", [phx_submit: :execute, class: "flex w-full"] %>
+              <%= text_input :command, :text, [placeholer: "Write Elixir code to execute and hit 'Enter'...", value: "", class: "w-full px-1 outline-none"] %>
             </form>
           </div>
         </div>
@@ -50,18 +50,14 @@ defmodule Backdoor.BackdoorLive do
 
   @impl true
   def handle_event("execute", %{"command" => %{"text" => command}}, socket) do
-    {:ok, ast} = Code.string_to_quoted(command)
-    {result, bindings, env} = :elixir.eval_forms(ast, socket.assigns.bindings, socket.assigns.env)
+    pid = GenServer.whereis(Backdoor.CodeRunner)
+    result = Backdoor.CodeRunner.execute(pid, command)
 
-    output = socket.assigns.output ++ ["iex> " <> command] ++ [inspect(result)]
+    output = socket.assigns.output ++ ["backdoor> " <> command] ++ [inspect(result)]
 
     {:noreply,
      socket
      |> push_event("command", %{text: ""})
-     |> assign(bindings: bindings, env: env, output: output)}
-  end
-
-  def init_env do
-    :elixir.env_for_eval(file: "iex")
+     |> assign(output: output)}
   end
 end
