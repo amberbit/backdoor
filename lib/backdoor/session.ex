@@ -2,7 +2,7 @@ defmodule Backdoor.Session do
   import Backdoor.Session.ViaTuple
 
   # Public API
-
+  #
   def start_session() do
     with session_id <- Backdoor.Session.Counter.next_id(),
          spec <- %{
@@ -12,6 +12,7 @@ defmodule Backdoor.Session do
            type: :supervisor
          },
          {:ok, _pid} <- DynamicSupervisor.start_child(Backdoor.Session.DynamicSupervisor, spec) do
+      broadcast_session_ids()
       {:ok, session_id}
     end
   end
@@ -20,11 +21,15 @@ defmodule Backdoor.Session do
     with [{supervisor_pid, _}] <-
            Registry.lookup(Backdoor.Session.Registry, {Backdoor.Session.Supervisor, session_id}) do
       Supervisor.stop(supervisor_pid, :normal)
+      broadcast_session_ids()
+      :ok
     else
       [] ->
+        broadcast_session_ids()
         {:error, :not_found}
 
       err ->
+        broadcast_session_ids()
         err
     end
   end
@@ -42,5 +47,15 @@ defmodule Backdoor.Session do
 
   def get_logs(session_id) do
     Backdoor.Session.Log.get_logs(via_tuple(Backdoor.Session.Log, session_id))
+  end
+
+  @topic_name "backdoor_events"
+
+  defp broadcast_session_ids() do
+    Phoenix.PubSub.broadcast(pubsub_server(), @topic_name, {:session_ids, session_ids()})
+  end
+
+  defp pubsub_server() do
+    Application.get_env(:backdoor, :pubsub_server)
   end
 end

@@ -51,7 +51,7 @@ defmodule Backdoor.Router do
   end
 
   @doc false
-  def __session__(conn) do
+  def __session__(_conn) do
     %{}
   end
 end

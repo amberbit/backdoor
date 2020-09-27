@@ -5,11 +5,20 @@ defmodule Backdoor.BackdoorLive do
 
   use Backdoor.Web, :live_view
 
+  @topic_name "backdoor_events"
+
   @impl true
   def mount(_params, _session, socket) do
+    Phoenix.PubSub.subscribe(find_pubsub_server(socket.endpoint), @topic_name)
+
     {:ok,
      socket
-     |> assign(current_session_id: nil, session_ids: Backdoor.Session.session_ids(), logs: [])}
+     |> assign(
+       input_value: "",
+       current_session_id: nil,
+       session_ids: Backdoor.Session.session_ids(),
+       logs: []
+     )}
   end
 
   @impl true
@@ -51,8 +60,8 @@ defmodule Backdoor.BackdoorLive do
               <span class="text-xl text-grey border-r-0 border-grey p-2 px-0">
                 backdoor&gt;
               </span>
-              <%= form_tag "#", [phx_submit: :execute, class: "flex w-full"] %>
-                <%= text_input :command, :text, [placeholer: "Write Elixir code to execute and hit 'Enter'...", value: "", class: "w-full px-1 outline-none"] %>
+              <%= form_tag "#", [phx_change: :set_input_value, phx_submit: :execute, class: "flex w-full"] %>
+                <%= text_input :command, :text, [placeholer: "Write Elixir code to execute and hit 'Enter'...", value: @input_value, class: "w-full px-1 outline-none"] %>
               </form>
             </div>
           </div>
@@ -63,19 +72,40 @@ defmodule Backdoor.BackdoorLive do
   end
 
   @impl true
-  def handle_event("execute", %{"command" => %{"text" => command}}, socket) do
-    logs = Backdoor.Session.execute(socket.assigns.current_session_id, command)
-
+  def handle_info({:put_log, session_id, log}, %{assigns: %{current_session_id: sid}} = socket)
+      when session_id == sid do
     {:noreply,
      socket
-     |> push_event("command", %{text: ""})
-     |> assign(logs: socket.assigns.logs ++ logs)}
+     |> assign(logs: socket.assigns.logs ++ [log])}
+  end
+
+  def handle_info({:put_log, _session_id, _log}, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_info({:session_ids, session_ids}, socket) do
+    if Enum.member?(session_ids, socket.assigns.current_session_id) do
+      {:noreply, socket |> assign(session_ids: session_ids)}
+    else
+      {:noreply, socket |> assign(session_ids: session_ids, current_session_id: nil)}
+    end
+  end
+
+  @impl true
+  def handle_event("set_input_value", %{"command" => %{"text" => command}}, socket) do
+    {:noreply, socket |> assign(:input_value, command)}
+  end
+
+  def handle_event("execute", %{"command" => %{"text" => command}}, socket) do
+    Backdoor.Session.execute(socket.assigns.current_session_id, command)
+
+    {:noreply, socket |> assign(:input_value, "")}
   end
 
   def handle_event("start_session", %{}, socket) do
-    {:ok, session_id} = Backdoor.Session.start_session()
+    {:ok, _session_id} = Backdoor.Session.start_session()
 
-    {:noreply, socket |> assign(session_ids: Backdoor.Session.session_ids())}
+    {:noreply, socket}
   end
 
   def handle_event("stop_session", %{"session-id" => sid}, socket) do
@@ -85,9 +115,9 @@ defmodule Backdoor.BackdoorLive do
     if socket.assigns.current_session_id == session_id do
       {:noreply,
        socket
-       |> assign(current_session_id: nil, logs: [], session_ids: Backdoor.Session.session_ids())}
+       |> assign(current_session_id: nil, logs: [])}
     else
-      {:noreply, socket |> assign(session_ids: Backdoor.Session.session_ids())}
+      {:noreply, socket}
     end
   end
 
@@ -108,5 +138,17 @@ defmodule Backdoor.BackdoorLive do
 
   defp format({:result, value}) do
     inspect(value)
+  end
+
+  defp find_pubsub_server(endpoint) do
+    case Application.get_env(:backdoor, :pubsub_server) do
+      nil ->
+        server = endpoint.config(:pubsub_server) || endpoint.__pubsub_server__()
+        Application.put_env(:backdoor, :pubsub_server, server)
+        server
+
+      server ->
+        server
+    end
   end
 end
