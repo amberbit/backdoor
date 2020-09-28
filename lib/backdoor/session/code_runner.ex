@@ -1,6 +1,8 @@
 defmodule Backdoor.Session.CodeRunner do
   use GenServer
+  import Backdoor.Session.LogHelpers
   import Backdoor.Session.ViaTuple
+  require Logger
 
   # Public API
 
@@ -16,7 +18,20 @@ defmodule Backdoor.Session.CodeRunner do
   end
 
   @impl true
+  def handle_info({:io_reply, _, :ok}, state) do
+    {:noreply, state}
+  end
+
+  def handle_info(msg, state) do
+    Logger.warn("[#{__MODULE__} received unexpected message which was ignored:\n#{inspect(msg)}")
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_call({:execute, code}, _from, state) do
+    pid = GenServer.whereis(via_tuple(Backdoor.Session.CaptureOutput, state.session_id))
+    Process.group_leader(self(), pid)
+
     try do
       log(state.session_id, {:input, code})
       {result, bindings, env} = do_execute(code, state.bindings, state.env)
@@ -38,16 +53,5 @@ defmodule Backdoor.Session.CodeRunner do
 
   defp init_env do
     :elixir.env_for_eval(file: "backdoor")
-  end
-
-  @topic_name "backdoor_events"
-
-  defp log(session_id, value) do
-    Phoenix.PubSub.broadcast(pubsub_server(), @topic_name, {:put_log, session_id, value})
-    Backdoor.Session.Log.put_log(via_tuple(Backdoor.Session.Log, session_id), value)
-  end
-
-  defp pubsub_server() do
-    Application.get_env(:backdoor, :pubsub_server)
   end
 end
