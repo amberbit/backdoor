@@ -15,7 +15,7 @@ Application.put_env(:backdoor, DemoWeb.Endpoint,
       "node_modules/webpack/bin/webpack.js",
       "--mode",
       "production",
-      "--watch-stdin",
+      "--watch",
       cd: "assets"
     ]
   ],

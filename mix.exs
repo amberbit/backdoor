@@ -41,14 +41,14 @@ defmodule Backdoor.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix_live_view, "~> 0.14"},
+      {:phoenix_live_view, "~> 0.15"},
       {:phoenix_html, "~> 2.14.1 or ~> 2.15"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:plug_cowboy, "~> 2.0", only: :dev},
-      {:jason, "~> 1.0", only: [:dev, :test, :docs]},
-      {:floki, "~> 0.27.0", only: :test},
-      {:ex_doc, "~> 0.21", only: :dev, runtime: false},
-      {:stream_data, "~> 0.1", only: :test}
+      {:phoenix_live_reload, "~> 1.3", only: :dev},
+      {:plug_cowboy, "~> 2.4", only: :dev},
+      {:jason, "~> 1.2", only: [:dev, :test, :docs]},
+      {:floki, "~> 0.30", only: :test},
+      {:ex_doc, "~> 0.24", only: :dev, runtime: false},
+      {:stream_data, "~> 0.5", only: :test}
     ]
   end
 
