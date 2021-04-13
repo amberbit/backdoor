@@ -141,6 +141,10 @@ defmodule Backdoor.BackdoorLive do
   end
 
   defp format({:result, value}) do
+    format(value)
+  end
+
+  defp format(value) do
     inspect(value)
   end
 

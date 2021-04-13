@@ -9,6 +9,12 @@ defmodule Backdoor.Application do
       {Registry, keys: :unique, name: Backdoor.Session.Registry}
     ]
 
+    :logger.add_handler(
+      :backdoor_logger_handler,
+      Backdoor.LoggerHandler,
+      %{}
+    )
+
     Supervisor.start_link(children, strategy: :one_for_one)
   end
 end

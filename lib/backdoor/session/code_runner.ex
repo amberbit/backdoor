@@ -14,6 +14,7 @@ defmodule Backdoor.Session.CodeRunner do
 
   @impl true
   def init(session_id) do
+    Logger.metadata(backdoor_session_id: session_id)
     {:ok, %{session_id: session_id, bindings: [], env: init_env()}}
   end
 
