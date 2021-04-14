@@ -52507,7 +52507,7 @@ var EditorInput = {
 
     this.editor = this.el;
     var jar = CodeJar(this.editor, withLineNumbers((lib_default()).highlightElement), {
-      tab: '  ',
+      tab: "  ",
       preserveIdent: false
     });
     jar.onUpdate(function (code) {
@@ -52524,7 +52524,7 @@ var EditorInput = {
         jar.updateCode(code);
       }
     });
-    this.editor.addEventListener('keydown', function (e) {
+    this.editor.addEventListener("keydown", function (e) {
       if (e.keyCode == 13 && (e.metaKey || e.ctrlKey)) {
         _this.pushEvent("execute", {});
       }
@@ -52534,6 +52534,24 @@ var EditorInput = {
     if (this.editor) this.editor.destroy();
   }
 };
+;// CONCATENATED MODULE: ./js/scroll_to_bottom.js
+var ScrollToBottom = {
+  mounted: function mounted() {
+    var _this = this;
+
+    this.handleEvent("scroll_to_bottom", function () {
+      _this.el.scrollTop = _this.el.scrollHeight;
+    });
+  }
+};
+;// CONCATENATED MODULE: ./js/highlight.js
+
+
+var Highlight = {
+  mounted: function mounted() {
+    lib_default().highlightElement(this.el);
+  }
+};
 ;// CONCATENATED MODULE: ./js/app.js
 
 
@@ -52541,8 +52559,12 @@ var EditorInput = {
 
 
 
+
+
 var Hooks = {
-  "EditorInput": EditorInput
+  EditorInput: EditorInput,
+  ScrollToBottom: ScrollToBottom,
+  Highlight: Highlight
 };
 var socketPath = document.querySelector("html").getAttribute("phx-socket") || "/live";
 var csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
@@ -52553,10 +52575,10 @@ var liveSocket = new phoenix_live_view.LiveSocket(socketPath, phoenix.Socket, {
   }
 }); // Show progress bar on live navigation and form submits
 
-window.addEventListener("phx:page-loading-start", function (info) {
+window.addEventListener("phx:page-loading-start", function () {
   return nprogress_default().start();
 });
-window.addEventListener("phx:page-loading-stop", function (info) {
+window.addEventListener("phx:page-loading-stop", function () {
   return nprogress_default().done();
 }); // connect if there are any LiveViews on the page
 

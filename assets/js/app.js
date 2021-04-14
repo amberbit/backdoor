@@ -1,12 +1,16 @@
-import css from "../css/app.css";
+import "../css/app.css";
 import "phoenix_html";
 import { Socket } from "phoenix";
 import NProgress from "nprogress";
 import { LiveSocket } from "phoenix_live_view";
 import { EditorInput } from "./editor_input";
+import { ScrollToBottom } from "./scroll_to_bottom";
+import { Highlight } from "./highlight";
 
 let Hooks = {
-  "EditorInput": EditorInput
+  EditorInput: EditorInput,
+  ScrollToBottom: ScrollToBottom,
+  Highlight: Highlight,
 };
 
 let socketPath =
@@ -20,8 +24,8 @@ let liveSocket = new LiveSocket(socketPath, Socket, {
 });
 
 // Show progress bar on live navigation and form submits
-window.addEventListener("phx:page-loading-start", (info) => NProgress.start());
-window.addEventListener("phx:page-loading-stop", (info) => NProgress.done());
+window.addEventListener("phx:page-loading-start", () => NProgress.start());
+window.addEventListener("phx:page-loading-stop", () => NProgress.done());
 
 // connect if there are any LiveViews on the page
 liveSocket.connect();

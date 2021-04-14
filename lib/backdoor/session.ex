@@ -42,7 +42,17 @@ defmodule Backdoor.Session do
   end
 
   def execute(session_id, code) do
-    GenServer.call(via_tuple(Backdoor.Session.CodeRunner, session_id), {:execute, code})
+    GenServer.cast(via_tuple(Backdoor.Session.CodeRunner, session_id), {:execute, code})
+  end
+
+  def is_executing?(session_id) do
+    try do
+      :pong = GenServer.call(via_tuple(Backdoor.Session.CodeRunner, session_id), :ping, 10)
+      false
+    catch
+      _, _ ->
+        true
+    end
   end
 
   def get_logs(session_id) do

@@ -29,7 +29,7 @@ defmodule Backdoor.Session.CodeRunner do
   end
 
   @impl true
-  def handle_call({:execute, code}, _from, state) do
+  def handle_cast({:execute, code}, state) do
     pid = GenServer.whereis(via_tuple(Backdoor.Session.CaptureOutput, state.session_id))
     Process.group_leader(self(), pid)
 
@@ -37,12 +37,17 @@ defmodule Backdoor.Session.CodeRunner do
       log(state.session_id, {:input, code})
       {result, bindings, env} = do_execute(code, state.bindings, state.env)
       log(state.session_id, {:result, result})
-      {:reply, [{:input, code}, {:result, result}], %{state | bindings: bindings, env: env}}
+      {:noreply, %{state | bindings: bindings, env: env}}
     catch
       kind, error ->
         log(state.session_id, {:error, kind, error, __STACKTRACE__})
-        {:reply, [{:input, code}, {:error, kind, error, __STACKTRACE__}], state}
+        {:noreply, state}
     end
+  end
+
+  @impl true
+  def handle_call(:ping, _from, state) do
+    {:reply, :pong, state}
   end
 
   # private

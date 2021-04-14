@@ -69,19 +69,23 @@ defmodule Backdoor.BackdoorLive do
             <h3 class="text-grey-darkest mb-1 font-extrabold">Session: #<%= @current_session_id %></h3>
           </div>
           <!-- Output -->
-          <div class="px-6 py-4 flex-1 overflow-y-scroll">
-            <%= for log <- @logs do %>
-              <div class="flex items-start text-sm">
-                <pre><%= format(log) %></pre>
+          <div class="ml-4 pl-1 pr-0 pt-4 overflow-y-scroll flex flex-grow flex-col-reverse bg-dracula" phx-hook="ScrollToBottom" phx-update="prepend" id="logs">
+            <%= for %{id: id, value: value} <- @logs do %>
+              <div class="flex items-start text-sm" id="<%= id %>">
+                <%= format(id, value) %>
               </div>
             <% end %>
           </div>
           <!-- Input -->
-          <div class="px-4 flex-none" phx-update="ignore">
-            <div class="flex rounded-lg border-2 border-grey editor language-elixir" phx-hook="EditorInput" id="editor-input"></div>
+          <div class="px-4 my-2 flex-none" phx-update="ignore">
+            <div class="flex editor language-elixir" phx-hook="EditorInput" id="editor-input"></div>
           </div>
           <div class="pb-6 px-4 flex-none">
-            <a href="#" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex flex-grow justify-center my-4" phx-click="execute" title="You can also hit Ctrl+Enter or Command+Enter">Execute</a>
+            <%= if !is_executing?(@current_session_id, @logs) do %>
+              <a href="#" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 flex flex-grow justify-center my-4" phx-click="execute" title="You can also hit Ctrl+Enter or Command+Enter">Execute</a>
+            <% else %>
+              <a href="#" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 flex flex-grow justify-center my-4" title="The code is currently executing">Executing...</a>
+            <% end %>
           </div>
         </div>
       <% end %>
@@ -94,7 +98,7 @@ defmodule Backdoor.BackdoorLive do
       when session_id == sid do
     {:noreply,
      socket
-     |> assign(logs: socket.assigns.logs ++ [log])}
+     |> assign(logs: [log | socket.assigns.logs])}
   end
 
   def handle_info({:put_log, _session_id, _log}, socket) do
@@ -109,27 +113,28 @@ defmodule Backdoor.BackdoorLive do
     end
   end
 
+  def handle_info({_ref, :pong}, socket) do
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_event("set_input_value", %{"command" => %{"text" => command}}, socket) do
     {:noreply, socket |> assign(:input_value, command)}
   end
 
   def handle_event("execute", _, socket) do
-    socket.assigns.current_session_id
-    |> Backdoor.Session.execute(socket.assigns.input_value)
-    |> case do
-      [_, {:error, :error, %{__struct__: CompileError}, _}] ->
-        {:noreply, socket}
+    if Backdoor.Session.is_executing?(socket.assigns.current_session_id) do
+      socket
+    else
+      socket.assigns.current_session_id
+      |> Backdoor.Session.execute(socket.assigns.input_value)
 
-      [_, {:error, :error, {:badmatch, _}, _}] ->
-        {:noreply, socket}
-
-      _ ->
-        {:noreply,
-         socket
-         |> assign(:input_value, "")
-         |> push_event("new_input_value", %{"command" => %{"text" => ""}})}
+      socket
+      |> assign(:input_value, "")
+      |> push_event("new_input_value", %{"command" => %{"text" => ""}})
+      |> push_event("scroll_to_bottom", %{})
     end
+    |> into_tuple(:noreply)
   end
 
   def handle_event("start_session", %{}, socket) do
@@ -158,24 +163,64 @@ defmodule Backdoor.BackdoorLive do
      socket |> assign(current_session_id: session_id, logs: Backdoor.Session.get_logs(session_id))}
   end
 
-  defp format({:error, kind, error, stack}) do
-    Exception.format(kind, error, stack)
+  defp format(id, {:error, kind, error, stack}) do
+    assigns = %{id: id, kind: kind, error: error, stack: stack}
+
+    ~L"""
+    <div class="bg-dracula logged-error text-white" title="Error">
+      <pre id="<%= @id %>-inner"><%= Exception.format(@kind, @error, @stack) %></pre>
+    </div>
+    """
   end
 
-  defp format({:input, code}) do
-    code
+  defp format(id, {:input, code}) do
+    assigns = %{id: id, code: code}
+
+    ~L"""
+    <div class="bg-dracula w-full logged-input" phx-update="ignore" title="Executed code">
+      <pre id="<%= @id %>-inner" phx-hook="Highlight"><%= @code %></pre>
+    </div>
+    """
   end
 
-  defp format({:output, code}) do
-    code
+  defp format(id, {:output, text}) do
+    assigns = %{id: id, text: text}
+
+    ~L"""
+    <div class="bg-dracula w-full text-white logged-output" title="Console text output">
+      <pre id="<%= @id %>-inner" class="hljs"><%= @text %></pre>
+    </div>
+    """
   end
 
-  defp format({:result, value}) do
-    format(value)
+  defp format(id, {:result, value}) do
+    format(id, value)
   end
 
-  defp format(value) do
-    inspect(value)
+  defp format(id, %{level: level, meta: _, msg: {type, msg}} = _value) do
+    log_line =
+      case type do
+        :string -> msg
+        _ -> inspect(msg, pretty: true)
+      end
+
+    assigns = %{id: id, code: "[#{level}] #{log_line}"}
+
+    ~L"""
+    <div class="bg-black w-full text-white logged-log" phx-update="ignore" title="Logger statement">
+      <pre id="<%= @id %>-inner" phx-hook="Highlight" class="language-elixir"><%= @code %></pre>
+    </div>
+    """
+  end
+
+  defp format(id, value) do
+    assigns = %{id: id, code: inspect(value, pretty: true)}
+
+    ~L"""
+    <div class="bg-black w-full text-white logged-value" phx-update="ignore" title="Return value">
+      <pre id="<%= @id %>-inner" phx-hook="Highlight" class="language-elixir"><%= @code %></pre>
+    </div>
+    """
   end
 
   defp find_pubsub_server(endpoint) do
@@ -188,5 +233,13 @@ defmodule Backdoor.BackdoorLive do
       server ->
         server
     end
+  end
+
+  defp is_executing?(session_id, _) do
+    Backdoor.Session.is_executing?(session_id)
+  end
+
+  defp into_tuple(value, first_element) do
+    {first_element, value}
   end
 end

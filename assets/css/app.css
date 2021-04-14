@@ -19,16 +19,44 @@
 @import "../node_modules/nprogress/nprogress.css";
 
 .editor {
-    border-radius: 6px;
-    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
-    font-family: 'Source Code Pro', monospace;
-    font-size: 14px;
-    font-weight: 400;
-    height: 340px;
-    letter-spacing: normal;
-    line-height: 20px;
-    padding: 10px;
-    tab-size: 4;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 14px;
+  font-weight: 400;
+  height: 340px;
+  letter-spacing: normal;
+  line-height: 20px;
+  padding: 10px;
+  tab-size: 4;
 }
+
+.bg-dracula {
+  background-color: #282a36;
+}
+
+pre {
+  font-family: 'Source Code Pro', monospace;
+  white-space: pre-wrap;
+}
+
+.logged-error {
+  @apply border-l-8 border-red-400;
+}
+
+.logged-log {
+  @apply border-l-8 border-gray-400;
+}
+
+.logged-value {
+  @apply border-l-8 border-blue-400;
+}
+
+.logged-input {
+  @apply border-l-8 border-green-400;
+}
+
+.logged-output {
+  @apply border-l-8 border-yellow-400;
+}
+
 
 @tailwind utilities;
