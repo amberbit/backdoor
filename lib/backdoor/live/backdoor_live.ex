@@ -26,18 +26,40 @@ defmodule Backdoor.BackdoorLive do
     ~L"""
     <div class="font-sans antialiased h-screen flex w-full">
       <!-- Sidebar: -->
-      <div class="flex-none w-1/6 hidden md:block p-4">
-        <%= link "New session", to: "#", phx_click: :start_session, class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" %>
-        <ul class="py-4">
+      <div class="flex flex-col w-1/6 hidden md:block p-4">
+        <nav class="space-y-1" aria-label="Sidebar">
+          <div class="text-gray-600 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+            <span class="truncate uppercase">
+              Elixir shell sessions
+            </span>
+          </div>
+ 
           <%= for session_id <- @session_ids do %>
-            <li>
-              <%= link to: "#", class: "float-right", phx_click: :stop_session, phx_value_session_id: session_id do %>
-                [x]
+            <%= if session_id == @current_session_id do %>
+              <%= link to: "#", class: "float-right opacity-50 hover:opacity-60", phx_click: :stop_session, phx_value_session_id: session_id do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
               <% end %>
-              <%= link "##{session_id}", to: "#", phx_click: :switch_session, phx_value_session_id: session_id %>
-            </li>
+
+              <span class="bg-gray-100 text-gray-900 flex items-center px-3 py-2 text-sm font-medium rounded-md" aria-current="page">
+                <span class="truncate">
+                  <%= "##{session_id}" %>
+                </span>
+              </span>
+            <% else %>
+              <%= link to: "#", class: "float-right opacity-50 hover:opacity-60", phx_click: :stop_session, phx_value_session_id: session_id do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              <% end %>
+              <%= link "##{session_id}", to: "#", phx_click: :switch_session, phx_value_session_id: session_id, class: "text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center px-3 py-2 text-sm font-medium rounded-md" %>
+            <% end %>
           <% end %>
-        </ul>
+        </nav>
+
+        <%= link "New session", to: "#", phx_click: :start_session, class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex flex-grow justify-center my-4" %>
+
       </div>
       <!-- Main column -->
       <%= if @current_session_id do %>
@@ -103,9 +125,9 @@ defmodule Backdoor.BackdoorLive do
   end
 
   def handle_event("start_session", %{}, socket) do
-    {:ok, _session_id} = Backdoor.Session.start_session()
+    {:ok, session_id} = Backdoor.Session.start_session()
 
-    {:noreply, socket}
+    {:noreply, socket |> assign(current_session_id: session_id)}
   end
 
   def handle_event("stop_session", %{"session-id" => sid}, socket) do
