@@ -3,8 +3,11 @@ import "phoenix_html";
 import { Socket } from "phoenix";
 import NProgress from "nprogress";
 import { LiveSocket } from "phoenix_live_view";
+import { EditorInput } from "./editor_input";
 
-let Hooks = {};
+let Hooks = {
+  "EditorInput": EditorInput
+};
 
 let socketPath =
   document.querySelector("html").getAttribute("phx-socket") || "/live";

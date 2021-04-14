@@ -33,7 +33,7 @@ defmodule Backdoor.BackdoorLive do
               Elixir shell sessions
             </span>
           </div>
- 
+
           <%= for session_id <- @session_ids do %>
             <%= if session_id == @current_session_id do %>
               <%= link to: "#", class: "float-right opacity-50 hover:opacity-60", phx_click: :stop_session, phx_value_session_id: session_id do %>
@@ -77,15 +77,11 @@ defmodule Backdoor.BackdoorLive do
             <% end %>
           </div>
           <!-- Input -->
+          <div class="px-4 flex-none" phx-update="ignore">
+            <div class="flex rounded-lg border-2 border-grey editor language-elixir" phx-hook="EditorInput" id="editor-input"></div>
+          </div>
           <div class="pb-6 px-4 flex-none">
-            <div class="flex rounded-lg border-2 border-grey overflow-hidden">
-              <span class="text-xl text-grey border-r-0 border-grey p-2 px-0">
-                backdoor&gt;
-              </span>
-              <%= form_tag "#", [phx_change: :set_input_value, phx_submit: :execute, class: "flex w-full"] %>
-                <%= text_input :command, :text, [placeholer: "Write Elixir code to execute and hit 'Enter'...", value: @input_value, class: "w-full px-1 outline-none"] %>
-              </form>
-            </div>
+            <a href="#" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex flex-grow justify-center my-4" phx-click="execute" title="You can also hit Ctrl+Enter or Command+Enter">Execute</a>
           </div>
         </div>
       <% end %>
@@ -118,10 +114,22 @@ defmodule Backdoor.BackdoorLive do
     {:noreply, socket |> assign(:input_value, command)}
   end
 
-  def handle_event("execute", %{"command" => %{"text" => command}}, socket) do
-    Backdoor.Session.execute(socket.assigns.current_session_id, command)
+  def handle_event("execute", _, socket) do
+    socket.assigns.current_session_id
+    |> Backdoor.Session.execute(socket.assigns.input_value)
+    |> case do
+      [_, {:error, :error, %{__struct__: CompileError}, _}] ->
+        {:noreply, socket}
 
-    {:noreply, socket |> assign(:input_value, "")}
+      [_, {:error, :error, {:badmatch, _}, _}] ->
+        {:noreply, socket}
+
+      _ ->
+        {:noreply,
+         socket
+         |> assign(:input_value, "")
+         |> push_event("new_input_value", %{"command" => %{"text" => ""}})}
+    end
   end
 
   def handle_event("start_session", %{}, socket) do
